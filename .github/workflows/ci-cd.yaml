@@ -47,8 +47,10 @@ jobs:
       image_full: ${{ steps.tag.outputs.image_full }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        name: Checkout
+        with: 
+          token: ${{ secrets. GITHUB_TOKEN }}
 
       - name: Compute image tag (short SHA)
         id: tag
