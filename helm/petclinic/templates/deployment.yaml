@@ -49,17 +49,23 @@ spec:
           env:
             {{- toYaml .Values.env | nindent 12 }}
             {{- if .Values.database.enabled }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_DB
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:{{ .Values.database.type }}://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}"
+              value: "jdbc:{{ .Values.database.type }}://{{ .Values.database.host }}:{{ .Values.database.port }}/$(POSTGRES_DB)"
             - name: SPRING_DATASOURCE_USERNAME
-              value: {{ .Values.database.username }}
-            {{- if .Values.database.passwordSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_USER
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.passwordSecret }}
-                  key: password
-            {{- end }}
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_PASSWORD
             {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

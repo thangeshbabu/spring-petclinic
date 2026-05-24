@@ -110,14 +110,11 @@ healthCheck:
 
 # Database configuration
 database:
-  # For production, use external database
   enabled: false
-  type: mysql
+  type: postgresql
   host: ""
-  port: 3306
-  name: petclinic
-  username: petclinic
-  passwordSecret: ""
+  port: 5432
+  secretName: ""
 
 # Environment variables
 env:

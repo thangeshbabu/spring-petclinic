@@ -73,3 +73,10 @@ networkPolicy:
   ingressControllerNamespace: "ingress-nginx"
   cilium:
     enabled: false
+
+database:
+  enabled: true
+  type: postgresql
+  host: petclinic-postgres.database.azure.com
+  port: 5432
+  secretName: postgres-secret

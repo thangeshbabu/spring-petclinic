@@ -15,7 +15,6 @@ resources:
     cpu: 500m
     memory: 512Mi
 
-# Enable ingress for production with TLS
 ingress:
   enabled: true
   className: "nginx"
@@ -24,14 +23,14 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: petclinic.yourdomain.com
+    - host: assesment-prod.thangeshbabu.xyz
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: petclinic-tls
       hosts:
-        - petclinic.yourdomain.com
+        - assesment-prod.thangeshbabu.xyz
 
 # Strict security for production
 podSecurityContext:
@@ -102,9 +101,7 @@ networkPolicy:
 # Production database configuration (external)
 database:
   enabled: true
-  type: mysql
-  host: petclinic-mysql.database.azure.com
-  port: 3306
-  name: petclinic
-  username: petclinic
-  passwordSecret: petclinic-db-secret
+  type: postgresql
+  host: petclinic-postgres.database.azure.com
+  port: 5432
+  secretName: postgres-secret
