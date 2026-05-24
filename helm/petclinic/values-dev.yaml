@@ -81,6 +81,6 @@ networkPolicy:
 database:
   enabled: true
   type: postgresql
-  host: petclinic-postgres.database.azure.com
+  host: postgres
   port: 5432
   secretName: postgres-secret
