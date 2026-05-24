@@ -1,0 +1,19 @@
+apiVersion: v2
+name: petclinic
+description: A Helm chart for Spring PetClinic application
+version: 0.1.0
+appVersion: "latest"
+type: application
+
+keywords:
+  - spring
+  - java
+  - petclinic
+  - demo
+
+maintainers:
+  - name: Team
+    email: thangeshbabu@hellokitty.com
+
+sources:
+  - https://github.com/thangeshbabu/spring-petclinic

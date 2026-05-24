@@ -1,0 +1,100 @@
+# Production environment values
+# Extends base values.yaml with production-specific overrides
+
+replicaCount: 3
+
+image:
+  tag: "latest"  # Will be overridden by workflow
+
+# Production resource requirements
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Enable ingress for production with TLS
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: petclinic.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: petclinic-tls
+      hosts:
+        - petclinic.yourdomain.com
+
+# Strict security for production
+podSecurityContext:
+  fsGroup: 1001
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# Production environment variables
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "production"
+  - name: SERVER_PORT
+    value: "8080"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: "health,info,metrics"
+  - name: LOGGING_LEVEL_ROOT
+    value: "WARN"
+  - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK
+    value: "INFO"
+
+# Enable autoscaling for production
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Enable PDB for production
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Production affinity rules for better distribution
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - petclinic
+        topologyKey: kubernetes.io/hostname
+
+# Production database configuration (external)
+database:
+  enabled: true
+  type: mysql
+  host: petclinic-mysql.database.azure.com
+  port: 3306
+  name: petclinic
+  username: petclinic
+  passwordSecret: petclinic-db-secret

@@ -1,0 +1,61 @@
+# Development environment values
+# Extends base values.yaml with dev-specific overrides
+
+replicaCount: 1
+
+image:
+  tag: "latest"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Enable ingress for dev with basic configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: petclinic-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Relax security for dev debugging
+podSecurityContext:
+  fsGroup: 1001
+  runAsNonRoot: true
+  runAsUser: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# Dev-specific environment variables
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "dev"
+  - name: SERVER_PORT
+    value: "8080"
+  - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+    value: "health,info,metrics,env,configprops"
+  - name: LOGGING_LEVEL_ROOT
+    value: "INFO"
+
+# No PDB for dev (single replica)
+podDisruptionBudget:
+  enabled: false
+
+# Disable autoscaling for dev
+autoscaling:
+  enabled: false
