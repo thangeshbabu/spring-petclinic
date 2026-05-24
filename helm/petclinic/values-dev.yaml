@@ -20,11 +20,19 @@ ingress:
   className: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-dev"
+
   hosts:
-    - host: petclinic-dev.local
+    - host: assesment-dev.thangeshbabu.xyz
       paths:
         - path: /
           pathType: Prefix
+
+  tls:
+    - secretName: petclinic-dev-tls
+      hosts:
+        - assesment-dev.thangeshbabu.xyz
 
 # Relax security for dev debugging
 podSecurityContext:
@@ -59,3 +67,9 @@ podDisruptionBudget:
 # Disable autoscaling for dev
 autoscaling:
   enabled: false
+
+networkPolicy:
+  enabled: true
+  ingressControllerNamespace: "ingress-nginx"
+  cilium:
+    enabled: false

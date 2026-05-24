@@ -136,3 +136,9 @@ podDisruptionBudget:
 # Network Policy
 networkPolicy:
   enabled: false
+  ingressControllerNamespace: "ingress-nginx"
+  cilium:
+    enabled: false
+    egressFQDNs: []
+    # - fqdn: partner-api.example.com
+    #   port: "443"

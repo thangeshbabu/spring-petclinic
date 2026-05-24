@@ -89,6 +89,16 @@ affinity:
             - petclinic
         topologyKey: kubernetes.io/hostname
 
+networkPolicy:
+  enabled: true
+  ingressControllerNamespace: "ingress-nginx"
+  cilium:
+    enabled: true
+    egressFQDNs: []
+    # Add approved partner API FQDNs here, e.g.:
+    # - fqdn: partner-api.example.com
+    #   port: "443"
+
 # Production database configuration (external)
 database:
   enabled: true
