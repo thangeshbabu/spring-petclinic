@@ -102,128 +102,112 @@ jobs:
           docker push ${{ steps.tag.outputs.image_full }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
 
-  # deploy-dev:
-  #   name: Deploy → Dev
-  #   runs-on: ubuntu-latest
-  #   needs: build-scan-push
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Azure login (OIDC)
-  #       uses: azure/login@v2
-  #       with:
-  #         client-id:       ${{ secrets.AZURE_CLIENT_ID }}
-  #         tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
-  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #
-  #     - name: Get AKS credentials
-  #       run: |
-  #         az aks get-credentials \
-  #           --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
-  #           --name ${{ secrets.AKS_CLUSTER_NAME }} \
-  #           --overwrite-existing
-  #
-  #     - name: Set up Helm
-  #       uses: azure/setup-helm@v4
-  #
-  #     - name: Create namespace if not exists
-  #       run: |
-  #         kubectl create namespace ${{ env.DEV_NAMESPACE }} \
-  #           --dry-run=client -o yaml | kubectl apply -f -
-  #
-  #     - name: Helm history (pre-deploy)
-  #       run: |
-  #         helm history ${{ env.HELM_RELEASE }} \
-  #           -n ${{ env.DEV_NAMESPACE }} 2>/dev/null || echo "No previous releases"
-  #
-  #     - name: Helm deploy
-  #       id: helm_deploy
-  #       run: |
-  #         helm upgrade --install ${{ env.HELM_RELEASE }} ${{ env.HELM_CHART }} \
-  #           --namespace ${{ env.DEV_NAMESPACE }} \
-  #           --values ${{ env.HELM_CHART }}/values.yaml \
-  #           --values ${{ env.HELM_CHART }}/values-dev.yaml \
-  #           --set image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }} \
-  #           --set image.tag=${{ needs.build-scan-push.outputs.image_tag }} \
-  #           --atomic \
-  #           --timeout 5m \
-  #           --wait
-  #
-  #     - name: Wait for rollout
-  #       id: rollout
-  #       run: |
-  #         kubectl rollout status deployment/${{ env.HELM_RELEASE }} \
-  #           -n ${{ env.DEV_NAMESPACE }} --timeout=3m
-  #
-  #     - name: Smoke test
-  #       id: smoke
-  #       run: |
-  #         kubectl port-forward svc/${{ env.HELM_RELEASE }} 8080:80 \
-  #           -n ${{ env.DEV_NAMESPACE }} &
-  #         PF_PID=$!
-  #         sleep 8
-  #         HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-  #           http://localhost:8080/actuator/health || echo "000")
-  #         kill $PF_PID 2>/dev/null || true
-  #         echo "http_status=${HTTP_STATUS}" >> "$GITHUB_OUTPUT"
-  #         if [ "$HTTP_STATUS" != "200" ]; then
-  #           echo "Smoke test FAILED — HTTP $HTTP_STATUS"
-  #           exit 1
-  #         fi
-  #         echo "Smoke test PASSED — HTTP $HTTP_STATUS"
-  #
-  #     # - name: Capture deployment evidence
-  #     #   if: success()
-  #     #   run: |
-  #     #     REVISION=$(helm history ${{ env.HELM_RELEASE }} \
-  #     #       -n ${{ env.DEV_NAMESPACE }} --max 1 -o json | jq -r '.[0].revision')
-  #     #     POD_STATUS=$(kubectl get pods -n ${{ env.DEV_NAMESPACE }} \
-  #     #       -l app.kubernetes.io/name=${{ env.HELM_RELEASE }} -o wide)
-  #     #     HELM_STATUS=$(helm status ${{ env.HELM_RELEASE }} \
-  #     #       -n ${{ env.DEV_NAMESPACE }} --show-resources 2>/dev/null || \
-  #     #       helm status ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }})
-  #     #     {
-  #     #       echo "### Dev Deployment Evidence"
-  #     #       echo "| Field | Value |"
-  #     #       echo "|---|---|"
-  #     #       echo "| Image | \`${{ needs.build-scan-push.outputs.image_full }}\` |"
-  #     #       echo "| Helm release | \`${{ env.HELM_RELEASE }}\` revision \`${REVISION}\` |"
-  #     #       echo "| Namespace | \`${{ env.DEV_NAMESPACE }}\` |"
-  #     #       echo "| Rollout | ✅ Healthy |"
-  #     #       echo "| Smoke test | ✅ HTTP ${{ steps.smoke.outputs.http_status }} |"
-  #     #       echo "| Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |"
-  #     #       echo ""
-  #     #       echo "**Pod status:**"
-  #     #       echo "\`\`\`"
-  #     #       echo "${POD_STATUS}"
-  #     #       echo "\`\`\`"
-  #     #       echo "**Helm status:**"
-  #     #       echo "\`\`\`"
-  #     #       echo "${HELM_STATUS}"
-  #     #       echo "\`\`\`"
-  #     #     } >> "$GITHUB_STEP_SUMMARY"
-  #
-  #     - name: Rollback on failure
-  #       if: failure() && steps.helm_deploy.outcome == 'success'
-  #       run: |
-  #         echo "Post-deploy failure detected — rolling back"
-  #         helm rollback ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }} --wait || \
-  #           echo "No previous release to roll back to"
-  #         {
-  #           echo "### Dev Rollback Evidence"
-  #           echo "| Field | Value |"
-  #           echo "|---|---|"
-  #           echo "| Reason | Rollout or smoke test failure |"
-  #           echo "| Rolled back at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |"
-  #           echo ""
-  #           echo "**Helm history after rollback:**"
-  #           echo "\`\`\`"
-  #           helm history ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }} 2>/dev/null || true
-  #           echo "\`\`\`"
-  #         } >> "$GITHUB_STEP_SUMMARY"
+  deploy-dev:
+    name: Deploy_to_Dev
+    environment: dev
+    runs-on: ubuntu-latest
+    needs: build-scan-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --name ${{ secrets.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Create namespace if not exists
+        run: |
+          kubectl create namespace ${{ env.DEV_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Helm history (pre-deploy)
+        run: |
+          helm history ${{ env.HELM_RELEASE }} \
+            -n ${{ env.DEV_NAMESPACE }} 2>/dev/null || echo "No previous releases"
+
+      - name: Helm deploy
+        id: helm_deploy
+        run: |
+          helm upgrade --install ${{ env.HELM_RELEASE }} ${{ env.HELM_CHART }} \
+            --namespace ${{ env.DEV_NAMESPACE }} \
+            --values ${{ env.HELM_CHART }}/values.yaml \
+            --values ${{ env.HELM_CHART }}/values-dev.yaml \
+            --set image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }} \
+            --set image.tag=${{ needs.build-scan-push.outputs.image_tag }} \
+            --atomic \
+            --timeout 5m \
+            --wait
+
+      - name: Wait for rollout
+        id: rollout
+        run: |
+          kubectl rollout status deployment/${{ env.HELM_RELEASE }} \
+            -n ${{ env.DEV_NAMESPACE }} --timeout=3m
+
+      - name: Capture deployment evidence
+        if: success()
+        run: |
+          REVISION=$(helm history ${{ env.HELM_RELEASE }} \
+            -n ${{ env.DEV_NAMESPACE }} --max 1 -o json | jq -r '.[0].revision')
+          POD_STATUS=$(kubectl get pods -n ${{ env.DEV_NAMESPACE }} \
+            -l app.kubernetes.io/name=${{ env.HELM_RELEASE }} -o wide)
+          HELM_STATUS=$(helm status ${{ env.HELM_RELEASE }} \
+            -n ${{ env.DEV_NAMESPACE }} --show-resources 2>/dev/null || \
+            helm status ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }})
+          {
+            echo "### Dev Deployment Evidence"
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Image | \`${{ needs.build-scan-push.outputs.image_full }}\` |"
+            echo "| Helm release | \`${{ env.HELM_RELEASE }}\` revision \`${REVISION}\` |"
+            echo "| Namespace | \`${{ env.DEV_NAMESPACE }}\` |"
+            echo "| Rollout | ✅ Healthy |"
+            echo "| Smoke test | ✅ HTTP ${{ steps.smoke.outputs.http_status }} |"
+            echo "| Deployed at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |"
+            echo ""
+            echo "**Pod status:**"
+            echo "\`\`\`"
+            echo "${POD_STATUS}"
+            echo "\`\`\`"
+            echo "**Helm status:**"
+            echo "\`\`\`"
+            echo "${HELM_STATUS}"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Rollback on failure
+        if: failure() && steps.helm_deploy.outcome == 'success'
+        run: |
+          echo "Post-deploy failure detected — rolling back"
+          helm rollback ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }} --wait || \
+            echo "No previous release to roll back to"
+          {
+            echo "### Dev Rollback Evidence"
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Reason | Rollout or smoke test failure |"
+            echo "| Rolled back at | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |"
+            echo ""
+            echo "**Helm history after rollback:**"
+            echo "\`\`\`"
+            helm history ${{ env.HELM_RELEASE }} -n ${{ env.DEV_NAMESPACE }} 2>/dev/null || true
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
   #
   # # ────────────────────────────────────────────────────────────────────────────
   # # JOB 3 — Deploy to Production (manual gate)
