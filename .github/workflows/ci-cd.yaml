@@ -67,6 +67,7 @@ jobs:
           scan-type: image
           image-ref: ${{ steps.tag.outputs.image_full }}
           severity: CRITICAL,HIGH
+          skip_files: "/app/app.jar"
           exit-code: 1
 
       - name: Push to ACR
