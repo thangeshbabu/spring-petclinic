@@ -92,20 +92,9 @@ jobs:
           format:         table
           severity:       CRITICAL,HIGH
           ignore-unfixed: true
-          exit-code:      '0'
+          exit-code:      '1'
+          skip-files: "/app/app.jar"
       
-      - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: image
-          image-ref: ${{ steps.tag.outputs.image_full }}
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          exit-code: '1'
-          args: >
-            --skip-files /app/app.jar
-
       - name: Push to ACR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
