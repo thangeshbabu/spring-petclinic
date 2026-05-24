@@ -110,8 +110,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        name: Checkout
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
