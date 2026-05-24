@@ -52,13 +52,17 @@ securityContext:
 # Dev-specific environment variables
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "dev"
+    value: "postgres"
   - name: SERVER_PORT
     value: "8080"
   - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
     value: "health,info,metrics,env,configprops"
   - name: LOGGING_LEVEL_ROOT
     value: "INFO"
+  - name: SPRING_JPA_DATABASE_PLATFORM
+    value: "org.hibernate.dialect.PostgreSQLDialect"
+  - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+    value: "validate"
 
 # No PDB for dev (single replica)
 podDisruptionBudget:

@@ -51,7 +51,7 @@ securityContext:
 # Production environment variables
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "production"
+    value: "postgres"
   - name: SERVER_PORT
     value: "8080"
   - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
@@ -60,6 +60,10 @@ env:
     value: "WARN"
   - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK
     value: "INFO"
+  - name: SPRING_JPA_DATABASE_PLATFORM
+    value: "org.hibernate.dialect.PostgreSQLDialect"
+  - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+    value: "validate"
 
 # Enable autoscaling for production
 autoscaling:
