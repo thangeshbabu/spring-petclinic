@@ -50,15 +50,14 @@ jobs:
       - uses: actions/checkout@v6
         name: Checkout
         with: 
-          token: ${{ secrets. GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute image tag (short SHA)
         id: tag
         run: |
           SHORT_SHA="${GITHUB_SHA::7}"
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          # echo "image_full=${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image_full=${{ env.IMAGE_NAME }}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_full=${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Azure login (OIDC — no stored secrets)
         uses: azure/login@v2
