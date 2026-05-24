@@ -127,7 +127,7 @@ jobs:
           az aks get-credentials \
             --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
             --name ${{ secrets.AKS_CLUSTER_NAME }} \
-            --overwrite-existing
+            --overwrite-existing --admin
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
